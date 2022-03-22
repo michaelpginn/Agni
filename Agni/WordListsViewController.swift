@@ -33,23 +33,20 @@ class WordListsViewController: UIViewController, UITableViewDelegate, UITableVie
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext!
         
-        let fetchRequest:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName:"WordList") //get the list of lists
+        let fetchRequest = WordList.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        
-        var fetchedResults:[NSManagedObject]? = nil
-        do{
-            fetchedResults = try managedContext.fetch(fetchRequest) as? [NSManagedObject]
-        } catch _{
-            print("Something went wrong getting words")
+
+        guard let fetchedResults = try? managedContext.fetch(fetchRequest) else {
+            print("Could not fetch data")
+            return
         }
-        if (fetchedResults != nil){
-            for list in fetchedResults!{
-                if list.value(forKey: "Author") as! String == "Agni Dev"{
-                    self.lists.append(list)
-                }else{
-                    self.customLists.append(list)
-                }
+
+        for list in fetchedResults{
+            if list.author == "Agni Dev"{
+                lists.append(list)
+            } else {
+                customLists.append(list)
             }
         }
         self.selectedTitle = AgniDefaults.selectedTitle
@@ -134,7 +131,7 @@ class WordListsViewController: UIViewController, UITableViewDelegate, UITableVie
                 //Downloaded list
                 let list = self.lists[indexPath.row]
                 listLabel.text = (list.value(forKey: "title") as! String)
-                authorLabel.text = (list.value(forKey: "author") as! String)
+                authorLabel.text = (list.value(forKey: "author") as? String)
                 
                 let remainingData = list.value(forKey: "remaining_words") as! Data
                 let remaining = NSKeyedUnarchiver.unarchiveObject(with: remainingData) as! [String]
@@ -164,7 +161,7 @@ class WordListsViewController: UIViewController, UITableViewDelegate, UITableVie
         }else if tableView.tag == 2{
             let list = self.customLists[indexPath.row]
             listLabel.text = (list.value(forKey: "title") as! String)
-            authorLabel.text = (list.value(forKey: "author") as! String)
+            authorLabel.text = (list.value(forKey: "author") as? String)
             
             let remainingData = list.value(forKey: "remaining_words") as! Data
             let remaining = NSKeyedUnarchiver.unarchiveObject(with: remainingData) as! [String]
